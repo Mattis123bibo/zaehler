@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zähler 1 bis 10</title>
+<title>Zähler 1 bis 3</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: sans-serif; background: #0a0a1a; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
   #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
   .wrap { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; gap: 2rem; }
-  .number { font-size: 96px; font-weight: 500; line-height: 1; min-height: 110px; display: flex; align-items: center; justify-content: center; }
+  .number { font-size: 96px; font-weight: 500; line-height: 1; min-height: 110px; display: flex; align-items: center; justify-content: center; transition: color 0.3s; }
   .dots { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   .dot { width: 28px; height: 28px; border-radius: 50%; background: #333; transition: background 0.2s; }
   .dot.active { background: #5DCAA5; }
@@ -31,31 +31,32 @@
   </div>
 </div>
 <script>
-/* ── Counter ── */
+/* ── Counter (1–3) ── */
 let current = 1, timer = null;
 const numEl = document.getElementById('num');
 const dotsEl = document.getElementById('dots');
 const autoBtn = document.getElementById('auto-btn');
-for (let i = 1; i <= 10; i++) {
+for (let i = 1; i <= 3; i++) {
   const d = document.createElement('div');
   d.className = 'dot'; d.id = 'dot' + i;
   dotsEl.appendChild(d);
 }
 function render() {
   numEl.textContent = current;
-  for (let i = 1; i <= 10; i++)
+  numEl.style.color = current === 3 ? '#f4a261' : '#fff';
+  for (let i = 1; i <= 3; i++)
     document.getElementById('dot'+i).classList.toggle('active', i <= current);
 }
 function step(dir) {
   current += dir;
-  if (current > 10) current = 1;
-  if (current < 1) current = 10;
+  if (current > 3) current = 1;
+  if (current < 1) current = 3;
   render();
 }
 function toggleAuto() {
   if (timer) { clearInterval(timer); timer = null; autoBtn.textContent = '\u25BA Auto'; }
   else {
-    timer = setInterval(() => { current = current >= 10 ? 1 : current + 1; render(); }, 800);
+    timer = setInterval(() => { current = current >= 3 ? 1 : current + 1; render(); }, 800);
     autoBtn.textContent = '\u23F9 Stop';
   }
 }
@@ -69,11 +70,11 @@ resize();
 window.addEventListener('resize', resize);
 
 /* ── Draw Kingfisher ── */
-function drawBird(cx, cy, wingPhase, drinkTilt) {
+function drawBird(cx, cy, wingPhase, drinkTilt, drunkTilt, drunkWobble) {
   ctx.save();
   ctx.translate(cx, cy);
-  // tilt head down when drinking
-  if (drinkTilt > 0) ctx.rotate(drinkTilt * 0.35);
+  if (drinkTilt !== 0) ctx.rotate(drinkTilt * 0.35);
+  if (drunkTilt !== 0) ctx.rotate(drunkTilt);
   ctx.scale(0.95, 0.95);
 
   const wBeat = Math.sin(wingPhase * Math.PI * 2);
@@ -129,15 +130,26 @@ function drawBird(cx, cy, wingPhase, drinkTilt) {
   ctx.fillStyle='#03045e'; ctx.globalAlpha=0.85; ctx.fill(); ctx.globalAlpha=1;
   ctx.strokeStyle='rgba(100,210,240,0.5)'; ctx.lineWidth=0.7;
   for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(44+i*8,-14);ctx.lineTo(46+i*7,-26);ctx.stroke();}
-
   ctx.beginPath(); ctx.ellipse(72,2,9,6,0.4,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fill();
   ctx.beginPath(); ctx.ellipse(62,4,10,4,-0.2,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.fill();
 
-  // eye
+  // eye — drunk: X-eyes when drunkWobble active
   ctx.beginPath(); ctx.arc(68,-10,7,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
-  ctx.beginPath(); ctx.arc(68,-10,5.5,0,Math.PI*2); ctx.fillStyle='#4a0e0e'; ctx.fill();
-  ctx.beginPath(); ctx.arc(68,-10,3.5,0,Math.PI*2); ctx.fillStyle='#050505'; ctx.fill();
-  ctx.beginPath(); ctx.arc(70,-12,1.5,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
+  if (drunkWobble > 0.1) {
+    // X-eye
+    ctx.save(); ctx.translate(68,-10);
+    ctx.strokeStyle='#c1440e'; ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-4,-4); ctx.lineTo(4,4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(4,-4); ctx.lineTo(-4,4); ctx.stroke();
+    ctx.restore();
+    // rosy cheeks
+    ctx.beginPath(); ctx.arc(62,-2,6,0,Math.PI*2);
+    ctx.fillStyle='rgba(220,80,80,0.35)'; ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.arc(68,-10,5.5,0,Math.PI*2); ctx.fillStyle='#4a0e0e'; ctx.fill();
+    ctx.beginPath(); ctx.arc(68,-10,3.5,0,Math.PI*2); ctx.fillStyle='#050505'; ctx.fill();
+    ctx.beginPath(); ctx.arc(70,-12,1.5,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
+  }
 
   // beak
   ctx.beginPath(); ctx.moveTo(80,-10); ctx.lineTo(130,-5); ctx.lineTo(80,-4); ctx.closePath();
@@ -161,209 +173,252 @@ function drawBeerGlass(x, y, fillLevel, rotation) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rotation);
-
   const w = 38, h = 60, base = 28;
-
-  // foam drip
   if (fillLevel > 0.7) {
-    ctx.beginPath(); ctx.arc(x > canvas.width*0.5 ? -5 : 5, -h*0.5-6, 7, 0, Math.PI*2);
+    ctx.beginPath(); ctx.arc(0, -h*0.5-6, 7, 0, Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.fill();
-    ctx.beginPath(); ctx.arc(2, -h*0.5-4, 5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6, -h*0.5-4, 5, 0, Math.PI*2); ctx.fill();
   }
-
-  // glass body (trapezoid)
   ctx.beginPath();
-  ctx.moveTo(-base/2, h/2);
-  ctx.lineTo(-w/2, -h/2);
-  ctx.lineTo(w/2, -h/2);
-  ctx.lineTo(base/2, h/2);
+  ctx.moveTo(-base/2, h/2); ctx.lineTo(-w/2, -h/2); ctx.lineTo(w/2, -h/2); ctx.lineTo(base/2, h/2);
   ctx.closePath();
-  ctx.fillStyle='rgba(180,230,255,0.18)';
-  ctx.fill();
-  ctx.strokeStyle='rgba(180,230,255,0.7)';
-  ctx.lineWidth=2;
-  ctx.stroke();
-
-  // beer fill
+  ctx.fillStyle='rgba(180,230,255,0.18)'; ctx.fill();
+  ctx.strokeStyle='rgba(180,230,255,0.7)'; ctx.lineWidth=2; ctx.stroke();
   const beerTop = h/2 - h * fillLevel;
   ctx.beginPath();
   ctx.moveTo(-base/2 + (base-w)/2 * (1-fillLevel), beerTop);
-  ctx.lineTo(w/2 - (w-base)/2 * fillLevel, beerTop);  // simplify
-  ctx.lineTo(base/2, h/2);
-  ctx.lineTo(-base/2, h/2);
-  ctx.closePath();
+  ctx.lineTo(w/2 - (w-base)/2 * fillLevel, beerTop);
+  ctx.lineTo(base/2, h/2); ctx.lineTo(-base/2, h/2); ctx.closePath();
   const beer = ctx.createLinearGradient(0, beerTop, 0, h/2);
-  beer.addColorStop(0,'rgba(240,180,20,0.85)');
-  beer.addColorStop(1,'rgba(180,100,5,0.9)');
+  beer.addColorStop(0,'rgba(240,180,20,0.85)'); beer.addColorStop(1,'rgba(180,100,5,0.9)');
   ctx.fillStyle=beer; ctx.fill();
-
-  // foam on top
   ctx.beginPath();
-  for(let i=0;i<5;i++){
-    ctx.arc(-w/2+5+i*8, beerTop, 5, Math.PI, 0);
-  }
+  for(let i=0;i<5;i++) ctx.arc(-w/2+5+i*8, beerTop, 5, Math.PI, 0);
   ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fill();
-
-  // handle
   ctx.beginPath();
   ctx.arc(w/2+8, 0, 14, -Math.PI*0.5, Math.PI*0.5);
   ctx.strokeStyle='rgba(180,230,255,0.65)'; ctx.lineWidth=5; ctx.stroke();
-
-  // glass shine
   ctx.beginPath();
-  ctx.moveTo(-w/2+4, -h/2+6);
-  ctx.lineTo(-w/2+8, h/2-8);
+  ctx.moveTo(-w/2+4, -h/2+6); ctx.lineTo(-w/2+8, h/2-8);
   ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=3; ctx.lineCap='round'; ctx.stroke();
-
   ctx.restore();
+}
+
+/* ── Stars/bubbles for drunk effect ── */
+let drunkStars = [];
+function spawnDrunkStars(x, y) {
+  for(let i=0;i<12;i++){
+    const angle = (i/12)*Math.PI*2;
+    drunkStars.push({ x, y, angle, dist:0, life:1, speed:1.5+Math.random() });
+  }
+}
+function updateDrunkStars(dt) {
+  drunkStars = drunkStars.filter(s=>s.life>0);
+  for(const s of drunkStars){
+    s.dist += s.speed*(dt/16);
+    s.life -= 0.008*(dt/16)*16;
+    const sx = s.x + Math.cos(s.angle)*s.dist;
+    const sy = s.y + Math.sin(s.angle)*s.dist - s.dist*0.3;
+    ctx.save();
+    ctx.globalAlpha = s.life;
+    ctx.fillStyle = '#f4e04a';
+    ctx.font = '16px sans-serif';
+    ctx.fillText('★', sx, sy);
+    ctx.restore();
+  }
 }
 
 /* ── Splash particles ── */
 let splashParticles = [];
-function spawnSplash(x, y) {
-  for(let i=0;i<18;i++){
-    const angle = Math.random()*Math.PI*2;
-    const speed = 2+Math.random()*5;
-    splashParticles.push({
-      x,y,
-      vx: Math.cos(angle)*speed,
-      vy: Math.sin(angle)*speed - 3,
-      life: 1.0,
-      r: 2+Math.random()*4,
-      color: Math.random()>0.5 ? 'rgba(240,180,20,' : 'rgba(255,255,255,'
-    });
-  }
-}
 function updateSplash(dt) {
   splashParticles = splashParticles.filter(p=>p.life>0);
   for(const p of splashParticles){
-    p.x += p.vx*(dt/16);
-    p.y += p.vy*(dt/16);
-    p.vy += 0.3;
-    p.life -= 0.03;
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle = p.color + p.life + ')';
-    ctx.fill();
+    p.x += p.vx*(dt/16); p.y += p.vy*(dt/16); p.vy += 0.3; p.life -= 0.03;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle = p.color + p.life + ')'; ctx.fill();
   }
 }
 
-/* ── Bird & drink state ── */
-const DRINK_NONE=0, DRINK_APPEAR=1, DRINK_DRINKING=2, DRINK_THROW=3;
+/* ── States ── */
+const S_FLY=0, S_DRINK_APPEAR=1, S_DRINKING=2, S_THROW=3, S_DRUNK=4, S_LOOP=5, S_RECOVER=6;
 
-const bird = { x:-150, y:200, speed:4.5, phase:0, bobTime:0,
-  drinkState: DRINK_NONE, drinkTimer:0,
+const bird = {
+  x:-150, y:200, speed:4.5, phase:0, bobTime:0,
+  state: S_FLY, stateTimer:0,
   drinkTilt:0,
-  glass: { x:0, y:0, vx:0, vy:0, rot:0, vrot:0, fill:0.85, visible:false, thrown:false }
+  drunkWobble:0, drunkAngle:0,
+  loopAngle:0, loopCx:0, loopCy:0,
+  glass:{ x:0,y:0,vx:0,vy:0,rot:0,vrot:0,fill:0.85,visible:false }
 };
 
 function resetBird() {
   bird.x = -150;
-  bird.y = canvas.height*(0.15+Math.random()*0.62);
+  bird.y = canvas.height*(0.2+Math.random()*0.55);
   bird.speed = 3.8+Math.random()*1.5;
   bird.phase = Math.random();
-  bird.drinkState = DRINK_NONE;
-  bird.drinkTimer = 0;
+  bird.state = S_FLY;
+  bird.stateTimer = 0;
   bird.drinkTilt = 0;
+  bird.drunkWobble = 0;
+  bird.drunkAngle = 0;
   bird.glass.visible = false;
-  bird.glass.thrown = false;
 }
 resetBird();
 
 let lastTs=0;
 function animate(ts) {
-  const dt = Math.min(ts-lastTs, 40); lastTs=ts;
+  const dt = Math.min(ts-lastTs,40); lastTs=ts;
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   const midX = canvas.width*0.5;
+  bird.stateTimer += dt;
 
-  // ── State machine ──
-  if (bird.drinkState === DRINK_NONE) {
+  if (bird.state === S_FLY) {
     bird.x += bird.speed*(dt/16);
     bird.phase += dt*0.006;
     bird.bobTime += dt*0.002;
-
-    // trigger when near center
     if (bird.x > midX-30 && bird.x < midX+30) {
-      bird.drinkState = DRINK_APPEAR;
-      bird.drinkTimer = 0;
-      bird.glass.x = bird.x + 90;
-      bird.glass.y = bird.y - 20;
-      bird.glass.fill = 0.85;
-      bird.glass.rot = 0;
-      bird.glass.visible = true;
-      bird.glass.thrown = false;
+      bird.state = S_DRINK_APPEAR;
+      bird.stateTimer = 0;
+      bird.glass = { x:bird.x+160, y:bird.y-20, vx:0,vy:0, rot:0,vrot:0, fill:0.85, visible:true };
     }
+    if (bird.x > canvas.width+200) { step(1); resetBird(); }
   }
-  else if (bird.drinkState === DRINK_APPEAR) {
-    bird.drinkTimer += dt;
-    // glass floats in from right
-    const t = Math.min(bird.drinkTimer/400, 1);
+  else if (bird.state === S_DRINK_APPEAR) {
+    const t = Math.min(bird.stateTimer/400,1);
     bird.glass.x = (bird.x+160) - t*70;
-    bird.glass.y = bird.y - 20;
-    if (t >= 1) { bird.drinkState = DRINK_DRINKING; bird.drinkTimer = 0; }
+    bird.glass.y = bird.y-20;
+    if (t>=1) { bird.state=S_DRINKING; bird.stateTimer=0; }
   }
-  else if (bird.drinkState === DRINK_DRINKING) {
-    bird.drinkTimer += dt;
-    const t = Math.min(bird.drinkTimer/1200, 1);
+  else if (bird.state === S_DRINKING) {
+    const t = Math.min(bird.stateTimer/1200,1);
     bird.drinkTilt = Math.sin(t*Math.PI)*0.5;
     bird.glass.rot = -Math.sin(t*Math.PI)*0.4;
-    bird.glass.x = bird.x + 90;
-    bird.glass.y = bird.y - 20 - Math.sin(t*Math.PI)*12;
-    bird.glass.fill = 0.85 - t*0.45;
-    if (t >= 1) {
-      bird.drinkState = DRINK_THROW;
-      bird.drinkTimer = 0;
-      bird.drinkTilt = 0;
+    bird.glass.x = bird.x+90;
+    bird.glass.y = bird.y-20-Math.sin(t*Math.PI)*12;
+    bird.glass.fill = 0.85-t*0.45;
+    if (t>=1) {
       bird.glass.vx = 8+Math.random()*4;
       bird.glass.vy = -7-Math.random()*3;
       bird.glass.vrot = 0.2+Math.random()*0.15;
-      bird.glass.thrown = true;
+      bird.drinkTilt = 0;
+      if (current === 3) {
+        bird.state = S_DRUNK;
+        bird.stateTimer = 0;
+        bird.drunkWobble = 1;
+        spawnDrunkStars(bird.x, bird.y-30);
+      } else {
+        bird.state = S_THROW;
+        bird.stateTimer = 0;
+      }
     }
   }
-  else if (bird.drinkState === DRINK_THROW) {
-    bird.drinkTimer += dt;
+  else if (bird.state === S_THROW) {
     bird.x += bird.speed*(dt/16);
     bird.phase += dt*0.006;
     bird.bobTime += dt*0.002;
-
-    // glass physics
     bird.glass.vy += 0.35*(dt/16);
     bird.glass.x += bird.glass.vx*(dt/16);
     bird.glass.y += bird.glass.vy*(dt/16);
     bird.glass.rot += bird.glass.vrot*(dt/16);
-
-    // splash when hits bottom
-    if (!bird.glass._splashed && bird.glass.y > canvas.height+20) {
-      bird.glass._splashed = true;
-    }
-    if (bird.glass.y > canvas.height+120) {
-      bird.glass.visible = false;
-      bird.glass._splashed = false;
+    if (bird.glass.y > canvas.height+120) bird.glass.visible = false;
+    if (bird.x > canvas.width+200) { step(1); resetBird(); }
+  }
+  else if (bird.state === S_DRUNK) {
+    // Staggering in place: wobble left/right, no forward movement
+    const t = bird.stateTimer/2000;
+    bird.drunkAngle = Math.sin(t*Math.PI*6)*0.45*(1-Math.min(t,1)*0.3);
+    bird.phase += dt*0.004;
+    bird.bobTime += dt*0.004;
+    // throw glass too
+    bird.glass.vy += 0.35*(dt/16);
+    bird.glass.x += bird.glass.vx*(dt/16);
+    bird.glass.y += bird.glass.vy*(dt/16);
+    bird.glass.rot += bird.glass.vrot*(dt/16);
+    if (bird.glass.y > canvas.height+120) bird.glass.visible = false;
+    if (bird.stateTimer > 1800) {
+      // start loop
+      bird.state = S_LOOP;
+      bird.stateTimer = 0;
+      bird.drunkAngle = 0;
+      const loopR = 70;
+      bird.loopCx = bird.x;
+      bird.loopCy = bird.y - loopR;
+      bird.loopAngle = Math.PI/2; // start at bottom of circle
     }
   }
+  else if (bird.state === S_LOOP) {
+    // Full loop: bird orbits around loopCx/loopCy
+    const loopR = 70;
+    const loopSpeed = 0.004;
+    bird.loopAngle -= loopSpeed*dt; // counter-clockwise (upward first)
+    bird.x = bird.loopCx + Math.cos(bird.loopAngle)*loopR;
+    bird.y = bird.loopCy + Math.sin(bird.loopAngle)*loopR;
+    bird.phase += dt*0.008;
+    bird.drunkWobble = 0.5;
+    if (bird.stateTimer > (2*Math.PI/loopSpeed)) {
+      // loop done
+      bird.state = S_RECOVER;
+      bird.stateTimer = 0;
+      bird.drunkWobble = 0;
+      bird.drunkAngle = 0;
+      bird.loopCx += 60; // nudge forward after loop
+      bird.x = bird.loopCx;
+    }
+  }
+  else if (bird.state === S_RECOVER) {
+    // short wobble then fly normally
+    const t = Math.min(bird.stateTimer/600,1);
+    bird.drunkWobble = (1-t)*0.4;
+    bird.drunkAngle = Math.sin(bird.stateTimer*0.015)*(1-t)*0.3;
+    bird.x += bird.speed*(dt/16);
+    bird.phase += dt*0.006;
+    bird.bobTime += dt*0.002;
+    if (t>=1) { bird.state=S_FLY; bird.stateTimer=0; bird.drunkWobble=0; bird.drunkAngle=0; }
+    if (bird.x > canvas.width+200) { step(1); resetBird(); }
+  }
 
-  if (bird.x > canvas.width+200) { step(1); resetBird(); }
-
-  const bob = Math.sin(bird.bobTime*Math.PI*2)*5;
+  const bob = (bird.state===S_LOOP) ? 0 : Math.sin(bird.bobTime*Math.PI*2)*5;
   const bx = bird.x, by = bird.y+bob;
 
-  // glow
+  // glow (extra red-ish when drunk)
+  const glowColor = bird.drunkWobble>0.3 ? 'rgba(200,80,80,0.15)' : 'rgba(0,180,220,0.12)';
   const grd = ctx.createRadialGradient(bx,by,5,bx,by,80);
-  grd.addColorStop(0,'rgba(0,180,220,0.12)'); grd.addColorStop(1,'rgba(0,0,0,0)');
+  grd.addColorStop(0,glowColor); grd.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle=grd;
   ctx.beginPath(); ctx.ellipse(bx,by,80,50,0,0,Math.PI*2); ctx.fill();
 
-  // draw glass
-  if (bird.glass.visible) {
-    drawBeerGlass(bird.glass.x, bird.glass.y, Math.max(0.05,bird.glass.fill), bird.glass.rot);
+  // loop trail
+  if (bird.state===S_LOOP) {
+    ctx.save();
+    ctx.strokeStyle='rgba(240,180,20,0.25)';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.arc(bird.loopCx, bird.loopCy, 70, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
   }
 
-  // splash particles
+  if (bird.glass.visible) drawBeerGlass(bird.glass.x, bird.glass.y, Math.max(0.05,bird.glass.fill), bird.glass.rot);
   updateSplash(dt);
+  updateDrunkStars(dt);
 
-  // draw bird
-  drawBird(bx, by, bird.phase, bird.drinkTilt);
+  // loop: rotate bird around the circle tangent
+  let birdDrawX = bx, birdDrawY = by;
+  let loopRot = 0;
+  if (bird.state===S_LOOP) {
+    birdDrawX = bird.x; birdDrawY = bird.y;
+    loopRot = bird.loopAngle + Math.PI/2; // tangent to circle
+  }
+
+  ctx.save();
+  if (bird.state===S_LOOP) {
+    ctx.translate(birdDrawX, birdDrawY);
+    ctx.rotate(loopRot);
+    ctx.translate(-birdDrawX, -birdDrawY);
+  }
+  drawBird(birdDrawX, birdDrawY, bird.phase, bird.drinkTilt, bird.drunkAngle, bird.drunkWobble);
+  ctx.restore();
 
   requestAnimationFrame(animate);
 }
